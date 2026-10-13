@@ -2,13 +2,21 @@
 
 namespace App\Providers;
 
+use App\Adapters\Persistence\DbBookRepository;
+use App\Adapters\Persistence\DbCategoryRepository;
+use App\Adapters\Persistence\DbMemberRepository;
 use App\Adapters\Persistence\DbUserRepository;
+use App\Adapters\Storage\LocalCoverStorage;
 use App\Adapters\Security\Argon2idPasswordHasher;
 use App\Adapters\Security\HmacJwtTokenIssuer;
 use App\Adapters\System\SystemClock;
 use App\Adapters\System\UuidV4Generator;
+use App\Application\Ports\BookRepository;
+use App\Application\Ports\CategoryRepository;
 use App\Application\Ports\Clock;
+use App\Application\Ports\CoverStorage;
 use App\Application\Ports\IdGenerator;
+use App\Application\Ports\MemberRepository;
 use App\Application\Ports\PasswordHasher;
 use App\Application\Ports\TokenIssuer;
 use App\Application\Ports\UserRepository;
@@ -29,5 +37,9 @@ final class PortBindingsServiceProvider extends ServiceProvider
             $app->make(Clock::class),
         ));
         $this->app->singleton(UserRepository::class, DbUserRepository::class);
+        $this->app->singleton(CategoryRepository::class, DbCategoryRepository::class);
+        $this->app->singleton(BookRepository::class, DbBookRepository::class);
+        $this->app->singleton(MemberRepository::class, DbMemberRepository::class);
+        $this->app->singleton(CoverStorage::class, fn () => new LocalCoverStorage((string) env('COVERS_DIR', 'covers')));
     }
 }
