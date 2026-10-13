@@ -95,6 +95,7 @@ return [
             'prefix_indexes' => true,
             // data-model.md: everything lives in schema "library"
             'search_path' => 'library,public',
+            'timezone' => 'UTC',
             'sslmode' => 'prefer',
         ],
 

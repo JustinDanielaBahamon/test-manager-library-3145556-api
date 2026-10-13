@@ -3,12 +3,16 @@
 use App\Adapters\Http\Controllers\AuthController;
 use App\Adapters\Http\Controllers\BookController;
 use App\Adapters\Http\Controllers\CategoryController;
+use App\Adapters\Http\Controllers\LoanController;
 use App\Adapters\Http\Controllers\MemberController;
+use App\Adapters\Http\Controllers\ReportController;
 use App\Adapters\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Identifiers are UUIDs: anything else is a 404 and never collides with literal paths (spec-gaps.md G-4).
 Route::pattern('id', '[0-9a-fA-F-]{36}');
+Route::pattern('loanId', '[0-9a-fA-F-]{36}');
+Route::pattern('itemId', '[0-9a-fA-F-]{36}');
 
 // api-contract.md §3.1 — public
 Route::get('/health', fn () => ['status' => 'ok']);
@@ -39,5 +43,15 @@ Route::middleware('jwt')->group(function () {
         Route::get('/members', [MemberController::class, 'index']);
         Route::get('/members/{id}', [MemberController::class, 'show']);
         Route::post('/members', [MemberController::class, 'store']);
+
+        // §3.6 Loans — /loans/overdue is registered before /loans/{id}
+        Route::get('/loans/overdue', [LoanController::class, 'overdue']);
+        Route::post('/loans', [LoanController::class, 'store']);
+        Route::get('/loans', [LoanController::class, 'index']);
+        Route::get('/loans/{id}', [LoanController::class, 'show']);
+        Route::post('/loans/{loanId}/items/{itemId}/return', [LoanController::class, 'returnItem']);
     });
+
+    // §3.7 Report — admin only
+    Route::get('/reports/most-borrowed', [ReportController::class, 'mostBorrowed'])->middleware('role:admin');
 });
