@@ -13,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'jwt' => \App\Adapters\Http\Middleware\AuthenticateToken::class,
+            'role' => \App\Adapters\Http\Middleware\RequireRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(fn (Throwable $e, $request) => ErrorRenderer::render($e));

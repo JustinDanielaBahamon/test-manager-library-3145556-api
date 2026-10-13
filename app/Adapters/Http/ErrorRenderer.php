@@ -2,6 +2,7 @@
 
 namespace App\Adapters\Http;
 
+use App\Domain\DomainError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -15,8 +16,31 @@ use Throwable;
  */
 final class ErrorRenderer
 {
+    /** api-contract.md §2: business code -> HTTP status. */
+    private const STATUS = [
+        'INVALID_CREDENTIALS' => 401,
+        'UNAUTHENTICATED' => 401,
+        'FORBIDDEN_ROLE' => 403,
+        'NOT_FOUND' => 404,
+        'USERNAME_TAKEN' => 409,
+        'ISBN_TAKEN' => 409,
+        'DOCUMENT_TAKEN' => 409,
+        'BOOK_HAS_OPEN_LOANS' => 409,
+        'BOOK_NOT_AVAILABLE' => 409,
+        'MEMBER_HAS_OVERDUE' => 409,
+        'ITEM_ALREADY_RETURNED' => 409,
+        'MEMBER_LIMIT_EXCEEDED' => 422,
+        'DUPLICATE_BOOK_IN_LOAN' => 422,
+        'VALIDATION_ERROR' => 422,
+        'INVALID_DATE_RANGE' => 422,
+    ];
+
     public static function render(Throwable $e): JsonResponse
     {
+        if ($e instanceof DomainError) {
+            return self::body(self::STATUS[$e->errorCode] ?? 400, $e->errorCode, $e->getMessage(), $e->details);
+        }
+
         if ($e instanceof ValidationException) {
             $details = [];
             foreach ($e->errors() as $field => $messages) {
